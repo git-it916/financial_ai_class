@@ -16,11 +16,11 @@
 | KMB 스왑포인트 | `kmb swap` | 1M·2M·3M·6M·1Y BID/OFFER (단위 전) | 2023-10-12 ~ 수집 중 | `kmb_swap.parquet` |
 | FOMC | `fomc` | 성명 발표일, KST 시각(서머타임 반영), 2020년 긴급회의 표시 | 2016 ~ 2027 | `fomc_meetings.parquet` |
 | yfinance | `yf_intraday` | 5개 통화 1분봉(최근 30일)·5분봉·1시간봉(2년)·일봉 | 1분봉 2026-09-13 ~ | `yf_{1m,5m,1h,1d}.parquet` |
-| DTCC | `dtcc` | NDF 등 외환 파생 체결 건별(5개 통화 행만 추림) | 2024-10-09 ~ 수집 중 | **`~/fxbasis_data` (이 PC에만 있음)** |
+| DTCC | `dtcc` | NDF 등 외환 파생 체결 건별(5개 통화 행만 추림) | 2024-10-09 ~ 수집 중 | `data/external/` (OneDrive 동기화, git 제외) |
 | GDELT | `gdelt` | 영문 기사 제목·시각, 4개 주제, 월별 최대 250건 | 2017-01 ~ 수집 중(매우 느림) | `gdelt_articles.parquet` |
 
 - **원본 보관:** 원본 응답은 `data/raw/{출처}/`에 받은 그대로 두었습니다. 받은 파일마다 `manifest.csv`에 URL, 받은 시각, sha256, 행 수를 남겼습니다. ECOS 키는 `{KEY}`로 가려 기록합니다.
-- **용량이 큰 자료:** DTCC 원본 zip과 일별 파일(약 1.2GB)은 OneDrive 동기화를 피하려고 `~/fxbasis_data`(환경변수 `EXTERNAL_DATA_DIR`로 변경 가능)에 둡니다. **이 폴더는 다른 PC로 넘어가지 않습니다.**
+- **용량이 큰 자료:** DTCC 원본 zip과 일별 파일(약 1.1GB, 1,031개)은 `data/external/`에 있습니다. git에서는 빠지지만 OneDrive로 다른 PC에 넘어갑니다. 2026-10-11에 `~/fxbasis_data`에서 이리로 옮겼고, `manifest.csv` 경로도 함께 고쳤습니다. 위치를 바꾸려면 환경변수 `EXTERNAL_DATA_DIR`을 씁니다.
 
 **중단 시점 (2026-10-11, 사용자가 작업 중지):**
 - **DTCC:** 2024-10-09 ~ 2026-03-15까지 받았습니다. 그 구간에서도 평일 14일이 비어 있습니다(2025-05-28, 2025-12-03~05, 2026-01-22, 2026-02-04~16). 서버에 없는 날인지 일시 오류인지는 다시 돌리면 가려집니다. 2026-03-16 ~ 2026-10-09는 아직 받지 않았습니다. 그와 별도로 2021-03-19 하루치 파일이 있습니다.
@@ -59,16 +59,15 @@
 
 ## 4. 다른 PC에서 이어가기
 
-1. OneDrive 동기화가 끝났는지 확인합니다(코드·설정·`data/interim`·`.env`가 넘어옴). git을 쓰려면 이 폴더에서 바로 작업하면 됩니다.
-2. 가상환경을 새로 만듭니다(파이썬 3.14 기준, 3.11 이상이면 동작할 것으로 예상).
+1. **원래 PC에서 끄기 전에** 작업표시줄의 OneDrive 아이콘이 '최신 상태'인지 확인합니다. `data/external`의 1.1GB가 다 올라가야 합니다.
+2. 새 PC에서 OneDrive 동기화가 끝났는지 확인합니다. 코드·설정·`.env`·`data/`(external 포함)·git 이력(`.git`)이 모두 이 폴더에 들어 있습니다. 파일 탐색기에서 `financial_ai_class` 폴더를 오른쪽 클릭 → **'항상 이 디바이스에 유지'**를 고르면 자료가 미리 내려받아져 수집기가 빨리 돕니다.
+3. 가상환경을 새로 만듭니다(파이썬 3.14 기준, 3.11 이상이면 동작할 것으로 예상).
    ```
    python -m venv %USERPROFILE%\.venvs\fxbasis
    %USERPROFILE%\.venvs\fxbasis\Scripts\python -m pip install -r requirements.txt
    ```
-3. DTCC 자료를 준비합니다. 둘 중 하나를 고릅니다.
-   - (a) 이 PC의 `C:\Users\shins\fxbasis_data`를 외장 드라이브 등으로 같은 위치(또는 `EXTERNAL_DATA_DIR`)에 복사
-   - (b) 그 PC에서 다시 받기: `python -m src.collect.dtcc --start <오늘-2년>`. 2년 안의 자료는 아직 서버에 있습니다.
-4. 아래 재개 명령을 프로젝트 폴더에서 실행합니다.
+4. 아래 재개 명령을 프로젝트 폴더에서 실행합니다. DTCC는 `data/external`에 있는 날짜를 건너뛰고 나머지만 받습니다. 새로 받을 필요가 없습니다.
+5. Claude Code 대화 기록은 PC마다 따로 저장되어 넘어가지 않습니다. 새 PC에서는 프로젝트 폴더에서 `claude`를 실행하고 "HANDOFF.md 읽고 데이터 수집 이어서 해줘"라고 하면 됩니다.
 
 ## 5. 재개 명령
 

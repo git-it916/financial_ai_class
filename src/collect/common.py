@@ -18,11 +18,14 @@ from urllib3.util.retry import Retry
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw"
 INTERIM = ROOT / "data" / "interim"
+# Large files (DTCC zips/daily rows, KRX raw). Inside the OneDrive project folder so another PC
+# picks them up, but gitignored. Override with EXTERNAL_DATA_DIR.
 MANIFEST = ROOT / "manifest.csv"
 _MANIFEST_LOCK = threading.Lock()
 MANIFEST_FIELDS = ["fetched_at_utc", "source", "url", "path", "sha256", "rows", "note"]
 
 load_dotenv(ROOT / ".env")
+EXTERNAL = Path(os.getenv("EXTERNAL_DATA_DIR") or ROOT / "data" / "external")
 
 # Honest default UA. Some sites tarpit browser-like UAs (FRED); others need one (pass ua=BROWSER_UA).
 UA = "fx-basis-research/0.1 (academic project; python-requests)"
