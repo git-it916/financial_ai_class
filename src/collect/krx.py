@@ -13,6 +13,7 @@ import argparse
 import gzip
 import json
 from datetime import date, timedelta
+from pathlib import Path
 
 import pandas as pd
 
@@ -58,12 +59,18 @@ def main() -> None:
                 print(tag, len(rows), "rows,", len(usd), "USD", flush=True)
             polite_sleep(0.2)
         d += timedelta(days=1)
+        if d.day == 1 and recs:  # monthly checkpoint so a crash/limit midway keeps progress
+            _save(old, recs, out)
+    _save(old, recs, out)
+
+
+def _save(old: pd.DataFrame | None, recs: list[dict], out: Path) -> None:
     new = pd.DataFrame(recs)
     if old is not None:
         new = pd.concat([old, new], ignore_index=True)
     if len(new):
         write_parquet_atomic(new.astype("string").drop_duplicates(), out)
-        print("columns:", list(new.columns))
+        print("saved", len(new), "rows; columns:", list(new.columns), flush=True)
 
 
 if __name__ == "__main__":
