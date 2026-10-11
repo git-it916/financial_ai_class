@@ -218,3 +218,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- fx-basis project ---
+.env
+data/raw/
+data/interim/
+*.xls
+*.zip
+
+*.tmp

@@ -1,0 +1,72 @@
+# Sources, codes and call formats. Collectors read this file.
+start_date: 2016-01-01
+
+ecos:
+  url: https://ecos.bok.or.kr/api/StatisticSearch/{key}/json/kr/{start}/{end}/{stat}/{cycle}/{from}/{to}/{item}
+  key_env: ECOS_API_KEY
+  series:
+    usdkrw_open:       {stat: 731Y003, item: "0000002"}
+    usdkrw_high:       {stat: 731Y003, item: "0000005"}
+    usdkrw_low:        {stat: 731Y003, item: "0000004"}
+    usdkrw_close_1530: {stat: 731Y003, item: "0000003"}   # 1990~
+    usdkrw_close:      {stat: 731Y003, item: "0000013"}   # 2024-07-01~ (02:00 close; check basis time after 24h switch)
+    usdkrw_mar:        {stat: 731Y001, item: "0000001"}   # market average rate (NDF fixing)
+    twd_per_usd:       {stat: 731Y002, item: "0000031"}
+    idr_per_usd:       {stat: 731Y002, item: "0000029"}
+    php_per_usd:       {stat: 731Y002, item: "0000034"}
+    inr_per_usd:       {stat: 731Y002, item: "0000037"}
+    kofr:              {stat: 817Y002, item: "010901000"}
+    cd_91d:            {stat: 817Y002, item: "010502000"}
+    msb_91d:           {stat: 817Y002, item: "010400000"}
+    call_1d:           {stat: 817Y002, item: "010101000"}
+
+fred:
+  # Keyless CSV endpoint; the API (key) is only needed for release dates.
+  csv_url: https://fred.stlouisfed.org/graph/fredgraph.csv?id={id}&cosd={start}
+  api_url: https://api.stlouisfed.org/fred
+  key_env: FRED_API_KEY
+  series: [VIXCLS, DTWEXBGS, DGS2, DTB4WK, DTB3, DCPF3M, SOFR, SOFR30DAYAVG, SOFR90DAYAVG, DFF, DEXKOUS, DEXTAUS, DEXINUS]
+
+nyfed:
+  sofr_search: https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate={start}&endDate={end}
+  effr_search: https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate={start}&endDate={end}
+
+bis:
+  url: https://stats.bis.org/api/v1/data/{flow}/{key}?startPeriod={start}&format=csv
+  series:
+    xru_daily: {flow: WS_XRU, key: "D.KR+TW+ID+PH+IN.KRW+TWD+IDR+PHP+INR.A"}
+    policy_rates: {flow: WS_CBPOL, key: "D.KR+TW+ID+PH+IN+US"}
+
+cboe:
+  vix_csv: https://cdn-api.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv
+
+cbc_tw:
+  closing_daily: https://cpx.cbc.gov.tw/api/OpenData/FTDOpenData_Day
+  stats: https://cpx.cbc.gov.tw/API/DataAPI/Get?FileName={code}
+  codes: {call_rate_d: EG37D01, bank_fwd_m: EG55M01, bank_fwd_d: EG55D01}
+
+dtcc:
+  url: https://pddata.dtcc.com/ppd/api/report/cumulative/cftc/CFTC_CUMULATIVE_FOREX_{yyyy}_{mm}_{dd}.zip
+  keep_currencies: [KRW, TWD, IDR, PHP, INR]
+  first_known: 2025-01-02     # rolling retention; probe the real first date
+
+krx:
+  key_env: KRX_API_KEY
+  # Open API: derivatives > futures daily trading info. Path/headers per service spec.
+  start: 2016-01-01
+  night_start: 2025-06-09
+
+kmb:
+  swap_daily: https://www.kmbco.com/kor/rate/swap_rate.do          # POST s_date_sh=YYYY-MM-DD, all tenors, unit = jeon (/100 = KRW)
+  swap_range_xls: https://www.kmbco.com/kor/rate/swap_rate_excel.do?sDate={start}&eDate={end}   # 1Y only
+  fx: https://www.kmbco.com/kor/rate/exchange_rate.do?mkt=fx
+
+yfinance:
+  tickers: [KRW=X, TWD=X, IDR=X, PHP=X, INR=X]
+
+naver:
+  url: https://openapi.naver.com/v1/search/news.json
+  key_env: [NAVER_CLIENT_ID, NAVER_CLIENT_SECRET]
+
+gdelt:
+  url: https://api.gdeltproject.org/api/v2/doc/doc

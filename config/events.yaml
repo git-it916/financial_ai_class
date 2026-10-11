@@ -1,0 +1,35 @@
+# Regimes, policy dates, shocks, FOMC. Synced from plan.md.md section 5.
+regimes:
+  P_pre: {start: 2016-01-04, end: 2022-06-30, role: 정의 고정·임계값 보정·위약·검정력 (주 추정 제외)}
+  P0: {start: 2022-07-01, end: 2024-06-28}   # 2023-01 시작 대안. P_pre만 보고 확정
+  P1: {start: 2024-07-01, end: 2026-07-03}
+  P1_late: {start: 2025-06-09, end: 2026-07-03, role: KRX 야간 기반 괴리의 비교 기준}
+  P2: {start: 2026-07-06, end: null}
+# kind: announce·pilot·policy(한국 제도), shock(시장 충격), control(대조 통화 고유 충격)
+# '확인' 표시는 날짜를 보도자료로 검증한 뒤 지움
+events:
+  - {date: 2016-07-01, kind: policy, note: 선물환포지션 한도 조정(확인)}
+  - {date: 2020-03-18, kind: policy, note: 선물환포지션 한도 상향(확인)}
+  - {date: 2020-03-19, kind: shock, note: 한미 통화스와프 체결, 코로나19 달러 경색}
+  - {date: 2022-09-23, kind: policy, note: 국민연금–한은 외환스와프 신설(확인), 이후 한도 확대 시점 추가}
+  - {date: 2022-10-01, kind: shock, note: 단기자금시장 경색 구간 시작(구간 정의 확인)}
+  - {date: 2023-02-07, kind: announce, note: 외환시장 구조 개선방안 발표(02시 연장·RFI, 단계적 24시간)}
+  - {date: 2024-02-01, kind: pilot, note: 시범운영 TF 테스트 거래 시작(정확한 날짜 확인)}
+  - {date: 2024-07-01, kind: policy, note: 원/달러 09:00~02:00, RFI 참여, 정시 환율·TWAP 공시}
+  - {date: 2024-10-09, kind: announce, note: WGBI 편입 발표(KST 기준, 편입 시작일 별도 확인)}
+  - {date: null, kind: policy, note: WGBI 실제 편입 시작(확인) → P1_late·P2 비교 구간 안이면 외국인 채권 자금 통제 필수}
+  - {date: 2024-12-03, kind: shock, note: 비상계엄 선포 22시대 KST, P1 구간A에서 서울 열림 → RQ2 자연실험}
+  - {date: 2025-04-03, kind: shock, note: 미국 상호관세 발표(04-02 ET 오후)}
+  - {date: 2025-06-09, kind: policy, note: KRX 야간 파생시장 18:00~06:00(미국달러선물 포함). 야간 시간대의 처치이기도 함(0.3)}
+  - {date: null, kind: announce, note: 원/달러 24시간 전환 발표일(확인) → P1 말 예고 구간 시작}
+  - {date: 2026-07-06, kind: policy, note: 원/달러 평일 24시간(월 06:00~토 06:00, 서머타임 외 07:00), 공휴일 거래}
+control_events:
+  - {ccy: INR, date: 2020-06-01, note: 인도 국내은행 NDF 참여 허용·거래시간 확대(IMF 2024, 확인)}
+  - {ccy: TWD, date: 2025-05-02, note: 대만달러 급절상(생보사 헤지), 구간 끝 확인}
+  - {ccy: IDR, date: null, note: DNDF 도입·BI 개입 강화 시점 확인}
+  - {ccy: PHP, date: null, note: BSP 제도 변화 확인}
+fomc_statement_et:            # 14:00 ET, KST로는 다음 날 03:00(EDT)/04:00(EST). 2016~2023은 추가
+  - [2024-01-31, 2024-03-20, 2024-05-01, 2024-06-12, 2024-07-31, 2024-09-18, 2024-11-07, 2024-12-18]
+  - [2025-01-29, 2025-03-19, 2025-05-07, 2025-06-18, 2025-07-30, 2025-09-17, 2025-10-29, 2025-12-10]
+  - [2026-01-28, 2026-03-18, 2026-04-29, 2026-06-17, 2026-07-29, 2026-09-16, 2026-10-28, 2026-12-09]
+quarter_end: auto
