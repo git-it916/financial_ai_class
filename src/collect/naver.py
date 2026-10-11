@@ -24,7 +24,7 @@ def main() -> None:
     s.headers["X-Naver-Client-Secret"] = env("NAVER_CLIENT_SECRET")
     items = []
     for q in QUERIES:
-        for start in range(1, 1001, 100):
+        for start in [*range(1, 1001, 100), 1000]:  # API max start is 1000 -> up to 1,099 items
             r = s.get(URL, params={"query": q, "display": 100, "start": start, "sort": "date"}, timeout=30)
             r.raise_for_status()
             got = r.json().get("items", [])

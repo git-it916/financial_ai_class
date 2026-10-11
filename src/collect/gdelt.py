@@ -12,8 +12,9 @@ import json
 from datetime import date
 
 import pandas as pd
+import requests
 
-from .common import interim_path, log_manifest, polite_sleep, session, sha256_bytes, write_parquet_atomic
+from .common import UA, interim_path, log_manifest, polite_sleep, sha256_bytes, write_parquet_atomic
 
 URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 QUERIES = {
@@ -37,7 +38,8 @@ def main() -> None:
     ap.add_argument("--start", default="2017-01")
     a = ap.parse_args()
     y, m = map(int, a.start.split("-"))
-    s = session(retries=0)
+    s = requests.Session()  # no urllib3 retry: it turns 429 into RetryError and hides the status
+    s.headers["User-Agent"] = UA
     out = interim_path("gdelt_articles.parquet")
     old = pd.read_parquet(out) if out.exists() else None
     done = set(zip(old["query"], old["window"])) if old is not None else set()
@@ -48,18 +50,13 @@ def main() -> None:
                 continue
             params = {"query": f"{q} sourcelang:english", "mode": "artlist", "format": "json",
                       "maxrecords": 250, "sort": "datedesc", "startdatetime": st, "enddatetime": en}
-            arts, r = [], None
-            for attempt in range(4):
-                try:
-                    r = s.get(URL, params=params, timeout=90)
-                except Exception as e:
-                    print(tag, qname, "error", type(e).__name__, flush=True)
-                    r = None
-                if r is not None and r.status_code != 429:
-                    break
-                polite_sleep(60 * (attempt + 1))  # GDELT asks for <= 1 call / 5 s; back off hard on 429
-            if r is not None and r.ok and r.content.strip().startswith(b"{"):
-                arts = json.loads(r.content).get("articles", [])
+            r = _get(s, params, tag, qname)
+            if r is None:  # still blocked after long waits: keep what we have and stop; rerun resumes here
+                _write(old, rows, out)
+                raise SystemExit(f"GDELT still rate-limited at {tag} {qname}; saved progress, rerun later")
+            if not r.content.strip().startswith(b"{"):
+                print(tag, qname, "non-JSON:", r.text[:120].replace("\n", " "), flush=True)
+            arts = json.loads(r.content).get("articles", []) if r.content.strip().startswith(b"{") else []
             for x in arts:
                 rows.append({"query": qname, "window": tag, "title": x.get("title"), "url": x.get("url"),
                              "seendate": x.get("seendate"), "domain": x.get("domain"), "language": x.get("language")})
@@ -69,6 +66,20 @@ def main() -> None:
             _write(old, rows, out)
     _write(old, rows, out)
     log_manifest("gdelt", URL, out, sha256_bytes(out.read_bytes()), None, "merged accumulation")
+
+
+def _get(s: requests.Session, params: dict, tag: str, qname: str) -> requests.Response | None:
+    """Retry the same window until it succeeds; GDELT asks for <= 1 call / 5 s and 429s are sticky."""
+    for attempt in range(8):  # waits 1,2,4,8,15,15,15,15 min ~ 75 min before giving up
+        try:
+            r = s.get(URL, params=params, timeout=90)
+            if r.status_code == 200:
+                return r
+            print(tag, qname, "HTTP", r.status_code, flush=True)
+        except requests.RequestException as e:
+            print(tag, qname, "error", type(e).__name__, flush=True)
+        polite_sleep(60 * min(2 ** attempt, 15))
+    return None
 
 
 def _write(old, rows, out) -> None:
