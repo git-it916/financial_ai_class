@@ -1,6 +1,6 @@
 # 데이터 개요와 EDA 진행 방향
 
-기준: 2026-10-11 (KST). 연구 설계와 원래 EDA 계획은 `docs/plan.md.md`에 있습니다. 이 문서는 **지금 실제로 가진 자료**와, 그 자료로 EDA를 어떤 순서로 진행할지를 정리합니다. 기간 표기(P_pre·P0·P1·P1_late·P2)와 괴리 정의(①·②)는 계획서를 따릅니다.
+기준: 2026-10-11 (KST). 연구 설계와 원래 EDA 계획은 `docs/1_plan.md.md`에 있습니다. 이 문서는 **지금 실제로 가진 자료**와, 그 자료로 EDA를 어떤 순서로 진행할지를 정리합니다. 기간 표기(P_pre·P0·P1·P1_late·P2)와 괴리 정의(①·②)는 계획서를 따릅니다.
 
 ## 요약
 
@@ -218,7 +218,6 @@ P1의 종가는 02:00 마감 값이 맞습니다. P2의 종가는 새벽 시간�
 ```
 set PY=%USERPROFILE%\.venvs\fxbasis\Scripts\python
 set PYTHONIOENCODING=utf-8
-set EXTERNAL_DATA_DIR=%CD%\data\external
 
 %PY% -m src.collect.dtcc --workers 4      :: 매일. 받은 날짜는 건너뜀
 %PY% -m src.collect.yf_intraday           :: 매일(평일). 1분봉 누적
@@ -229,4 +228,4 @@ set EXTERNAL_DATA_DIR=%CD%\data\external
 %PY% -m src.collect.gdelt                 :: 429면 대기 후 재시도, 오래 막히면 저장하고 종료
 ```
 
-한 번만 받으면 되는 것(다시 돌려도 됨): `fred`, `nyfed`, `bis`, `cboe`, `cbc_tw`, `bap`, `kmb fx`, `fomc`. 이 수집기들은 파일을 통째로 덮어씁니다. KMB 외환처럼 사이트가 최근 몇 년치만 주는 출처는, 다시 받으면 오래된 날짜가 빠질 수 있습니다. 다시 받을 때는 `data/interim`을 먼저 백업합니다.
+대용량 자료(DTCC, KRX 원본)는 기본으로 `data/external`에 저장됩니다(다른 위치를 쓰려면 `.env`에 `EXTERNAL_DATA_DIR`). 한 번만 받으면 되는 것(다시 돌려도 됨): `fred`, `nyfed`, `bis`, `cboe`, `cbc_tw`, `bap`, `kmb fx`, `fomc`. 이 수집기들은 파일을 통째로 덮어씁니다. KMB 외환처럼 사이트가 최근 몇 년치만 주는 출처는, 다시 받으면 오래된 날짜가 빠질 수 있습니다. 다시 받을 때는 `data/interim`을 먼저 백업합니다.

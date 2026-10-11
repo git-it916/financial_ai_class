@@ -2,8 +2,8 @@
 
 The PPD site (pddata.dtcc.com) was returning 503 on 2026-10-11; the same files are
 served from DTCC's public S3 bucket, which also holds older files (weekly before ~2022,
-daily after). Raw zips and filtered rows both live under EXTERNAL_DATA_DIR (default
-~/fxbasis_data, outside OneDrive): raw/dtcc/{YYYY}/*.zip, interim/dtcc/{YYYY}/{date}.parquet.
+daily after). Raw zips and filtered rows live under EXTERNAL (default data/external,
+gitignored but synced by OneDrive): raw/dtcc/{YYYY}/*.zip, interim/dtcc/{YYYY}/{date}.parquet.
 Missing dates are logged to data/interim/dtcc_missing.csv.
 
 python -m src.collect.dtcc [--start 2020-10-01] [--end YYYY-MM-DD]
@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import io
-import os
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, timedelta
@@ -22,14 +21,12 @@ import pandas as pd
 import pyarrow.parquet as pq
 import yaml
 
-from .common import ROOT, interim_path, log_manifest, polite_sleep, session, sha256_bytes
+from .common import EXTERNAL, ROOT, interim_path, log_manifest, polite_sleep, session, sha256_bytes
 
 S3 = "https://kgc0418-tdw-data-0.s3.amazonaws.com/cftc/eod/CFTC_CUMULATIVE_FOREX_{d}.zip"
 PPD = "https://pddata.dtcc.com/ppd/api/report/cumulative/cftc/CFTC_CUMULATIVE_FOREX_{d}.zip"
 # PPD is tried only with --ppd (it was 503 on 2026-10-11 and its retries slow down missing dates).
 MIRRORS = [S3]
-# Large: keep both raw zips and per-day filtered parquet outside OneDrive.
-EXTERNAL = Path(os.getenv("EXTERNAL_DATA_DIR", Path.home() / "fxbasis_data"))
 RAW_DIR = EXTERNAL / "raw" / "dtcc"
 OUT_DIR = EXTERNAL / "interim" / "dtcc"
 

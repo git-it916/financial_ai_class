@@ -1,7 +1,7 @@
 """KRX Open API: futures daily trading info -> USD futures (미국달러선물) rows, all contract months.
 
 Needs KRX_API_KEY in .env and the '선물 일별매매정보' service approved for that key.
-Full daily responses are gzipped under EXTERNAL_DATA_DIR/raw/krx; USD rows go to
+Full daily responses are gzipped under EXTERNAL/raw/krx (data/external by default); USD rows go to
 data/interim/krx_usd_futures.parquet. Check whether the response separates the night
 session (field names vary; all fields are kept as strings).
 
@@ -12,16 +12,14 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
-import os
 from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
 
-from .common import env, interim_path, log_manifest, polite_sleep, session, sha256_bytes, write_parquet_atomic
+from .common import EXTERNAL, env, interim_path, log_manifest, polite_sleep, session, sha256_bytes, write_parquet_atomic
 
 URL = "https://data-dbg.krx.co.kr/svc/apis/drv/fut_bydd_trd?basDd={d}"
-EXTERNAL = Path(os.getenv("EXTERNAL_DATA_DIR", Path.home() / "fxbasis_data"))
 
 
 def is_usd(rec: dict) -> bool:
