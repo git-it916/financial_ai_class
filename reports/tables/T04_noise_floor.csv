@@ -1,0 +1,4 @@
+method,ndf_se_bp,onshore_noise_bp,onshore_source,noise_total_bp,basis_robust_sd_bp,signal_to_noise
+dtcc_1530,2.83,21.96,KMB half-spread / sqrt(3),22.14,34.98,1.58
+krx_day,3.56,2.57,KRX tick 0.10 / sqrt(12),4.39,40.31,9.17
+krx_night,6.48,2.63,KRX tick 0.10 / sqrt(12),6.99,75.79,10.83

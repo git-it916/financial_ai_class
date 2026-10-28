@@ -1,0 +1,4 @@
+standard-time block,days,median,mad,sd,sd_diff,ac1
+window ends 06:00 KST (KRX close),62,-8.19,39.88,79.38,91.35,0.35
+window ends 07:00 KST (NY close in winter),62,-15.32,64.75,116.96,171.65,-0.08
+"reference: DST days, ends 06:00",156,28.23,56.84,89.99,127.15,0.01
