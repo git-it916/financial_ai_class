@@ -1,0 +1,9 @@
+method,P_pre,P_pre_dst,P0,P0_dst,P1,P1_dst,P1_late,P1_late_dst,P2,P2_dst,P1_late_vs_P2_allowed
+dtcc_1530,0,0,0,0,422,257,263,180,69,69,True
+krx_night_0600 (main),0,0,0,0,259,179,259,179,63,63,True
+krx_day_1545,0,0,0,0,422,257,263,180,64,64,True
+"path_B (main, night & 15:30)",0,0,0,0,259,179,259,179,63,63,True
+"ecos_0600 (P2 only, check)",0,0,0,0,0,0,0,0,70,70,False
+news_approx,0,0,0,0,189,118,189,118,61,61,True
+dtcc_activity (KRW & 4 controls),0,0,0,0,452,274,279,190,70,70,True
+(weekdays in period),1694,1099,521,341,525,345,280,190,70,70,False

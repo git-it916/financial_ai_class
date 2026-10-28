@@ -13,6 +13,7 @@ import argparse
 import gzip
 import json
 from datetime import date, timedelta
+from pathlib import Path
 
 import pandas as pd
 
@@ -43,11 +44,19 @@ def main() -> None:
         tag = d.strftime("%Y%m%d")
         if d.weekday() < 5 and tag not in done:
             url = URL.format(d=tag)
-            r = s.get(url, timeout=60)
-            if r.status_code == 401:
-                raise SystemExit(f"401 from KRX: {r.text[:200]} (key or service approval)")
-            r.raise_for_status()
-            rows = json.loads(r.content).get("OutBlock_1", [])
+            for attempt in range(4):  # KRX occasionally returns an empty 200 body
+                r = s.get(url, timeout=60)
+                if r.status_code == 401:
+                    raise SystemExit(f"401 from KRX: {r.text[:200]} (key or service approval)")
+                r.raise_for_status()
+                try:
+                    rows = json.loads(r.content).get("OutBlock_1", [])
+                    break
+                except json.JSONDecodeError:
+                    print(tag, "non-JSON response, retry", attempt + 1, flush=True)
+                    polite_sleep(5 * (attempt + 1))
+            else:
+                raise SystemExit(f"{tag}: KRX kept returning non-JSON; rerun to resume")
             if rows:
                 raw = EXTERNAL / "raw" / "krx" / str(d.year) / f"fut_bydd_trd_{tag}.json.gz"
                 raw.parent.mkdir(parents=True, exist_ok=True)
@@ -58,12 +67,18 @@ def main() -> None:
                 print(tag, len(rows), "rows,", len(usd), "USD", flush=True)
             polite_sleep(0.2)
         d += timedelta(days=1)
+        if d.day == 1 and recs:  # monthly checkpoint so a crash/limit midway keeps progress
+            _save(old, recs, out)
+    _save(old, recs, out)
+
+
+def _save(old: pd.DataFrame | None, recs: list[dict], out: Path) -> None:
     new = pd.DataFrame(recs)
     if old is not None:
         new = pd.concat([old, new], ignore_index=True)
     if len(new):
         write_parquet_atomic(new.astype("string").drop_duplicates(), out)
-        print("columns:", list(new.columns))
+        print("saved", len(new), "rows; columns:", list(new.columns), flush=True)
 
 
 if __name__ == "__main__":

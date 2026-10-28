@@ -228,3 +228,4 @@ data/interim/
 
 *.tmp
 data/external/
+data/processed/

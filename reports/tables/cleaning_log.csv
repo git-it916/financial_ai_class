@@ -1,0 +1,33 @@
+run_at_utc,source,step,kind,rows_before,rows_after,rows_affected,reason,kept_in
+2026-10-28 15:08:20,krx,01_product,drop,160220,94424,65796,kept PROD_NM='미국달러 선물' outright contracts; calendar spreads ('SP') out,data/processed/removed/krx__01_product.parquet
+2026-10-28 15:08:20,krx,02_zero_volume,change,94424,94424,77347,no trades that day: open/high/low/close set to missing (KRX fills them with blanks or stale values),
+2026-10-28 15:08:20,krx,03_duplicates,drop,94424,94424,0,exact duplicate rows,
+2026-10-28 15:08:20,krx,04_flag_no_front_night,flag,94424,94424,24,front-month night session with no trades (close missing),
+2026-10-28 15:08:20,krx,04_flag_cme_link_night,flag,94424,94424,24152,"night rows 2014-12~2020 (KRX-CME link era, hours to be confirmed; kept, not used in main test)",
+2026-10-28 15:08:21,krx,99_saved,info,94424,94424,0,saved data\processed\krx_usd.parquet,
+2026-10-28 15:08:22,daily,01_merge,info,3935,3935,0,"ECOS + KMB swap + FRED outer-joined on date; nothing dropped, gaps stay missing (no fill)",
+2026-10-28 15:08:22,daily,02_flag_ohl_24h_def,flag,3935,3935,70,P2 ECOS open/high/low use the 06:00-06:00 day (not comparable to P1),
+2026-10-28 15:08:22,daily,02_flag_kr_holiday,flag,3935,3935,172,weekday with KRX closed (Korean holiday),
+2026-10-28 15:08:22,daily,99_saved,info,3935,3935,0,saved data\processed\daily.parquet,
+2026-10-28 15:08:48,dtcc,00_files,info,732,732,0,read 732 daily files; skipped old-layout files ['2021-03-19.parquet'],
+2026-10-28 15:08:48,dtcc,01_product,drop,18139133,17576909,562224,"kept only 'NA/Fwd NDF {KRW,TWD,INR,IDR,PHP} USD' (other products, EUR crosses, NDS, options out)",data/processed/removed/dtcc__01_product.parquet
+2026-10-28 15:08:48,dtcc,02_newt_trad,drop,17576909,14663161,2913748,"kept Action type=NEWT & Event type=TRAD; lifecycle rows (TERM/CORR/MODI/EROR/COMP/NOVA/...) are events on existing trades, counts by type in 01_product file",
+2026-10-28 15:08:53,dtcc,03_dedupe_id,drop,14663161,14663161,0,same Dissemination Identifier reported again (kept last),
+2026-10-28 15:08:55,dtcc,04_eror,drop,14663161,14598004,65157,trade later reported as EROR (cancelled as erroneous),data/processed/removed/dtcc__04_eror.parquet
+2026-10-28 15:09:28,dtcc,05_corr,change,14598004,14598004,74096,"applied last CORR to 1,336,117 trades; only fields that actually changed are kept (by field: {'Notional amount-Leg 1': 67623, 'Notional amount-Leg 2': 67481, 'Exchange rate': 4235, 'Execution Timestamp': 3892, 'Expiration Date': 3317})",data/processed/removed/dtcc__05_corr.parquet
+2026-10-28 15:09:35,news,01_parse,drop,8474,604,7870,kept articles containing an 'NDF 1개월물 ... 최종 호가' price sentence,
+2026-10-28 15:09:35,news,02_date_inferred,flag,604,604,307,no 'N일(현지시간)': ny_date = previous weekday of KST publication date,data/processed/removed/news__02_date_inferred.parquet
+2026-10-28 15:09:35,news,02_no_date,drop,604,604,0,'N일(현지시간)' did not match any of the 7 days before publication,
+2026-10-28 15:09:35,news,03_conflicts,flag,604,604,32,same NY date reported with different prices across articles (>0.5 won),data/processed/removed/news__03_conflicts.parquet
+2026-10-28 15:09:35,news,04_collapse,drop,604,305,299,collapsed to one row per NY date (median),
+2026-10-28 15:09:35,news,99_saved,info,305,305,0,saved data\processed\news_ndf.parquet; 2021-10-27 ~ 2026-10-07,
+2026-10-28 15:10:12,dtcc,06_unparseable,drop,14598004,14596670,1334,execution time or exchange rate could not be parsed,data/processed/removed/dtcc__06_unparseable.parquet
+2026-10-28 15:10:21,dtcc,07_before_start,drop,14596670,14547456,49214,executed before 2024-10-08 (late reports of old trades; coverage starts with the 2024-10-09 file),data/processed/removed/dtcc__07_before_start.parquet
+2026-10-28 15:10:49,dtcc,08_flag_dup_group_size,flag,14547456,14547456,2026640,"same ccy/second/rate/notional/expiry appears more than once (PB double report?), judged in E1",
+2026-10-28 15:10:49,dtcc,08_flag_outlier,flag,14547456,14547456,338757,"|rate - 10min median| > 5 x max(MAD, 4e-04 x median) within ccy x tenor",
+2026-10-28 15:10:49,dtcc,08_flag_bad_rate,flag,14547456,14547456,11073,more than 10% away from the ECOS daily reference rate,
+2026-10-28 15:10:49,dtcc,08_flag_package,flag,14547456,14547456,270045,Package indicator = TRUE,
+2026-10-28 15:10:49,dtcc,08_flag_nonstd,flag,14547456,14547456,4757,Non-standardized term indicator = TRUE,
+2026-10-28 15:10:49,dtcc,08_flag_notional_capped,flag,14547456,14547456,54628,notional reported as a cap ('+'); value is a lower bound,
+2026-10-28 15:10:49,dtcc,08_flag_no_tenor,flag,14547456,14547456,2598868,"maturity outside the 1M/3M buckets {'1M': (25, 40), '3M': (80, 100)}",
+2026-10-28 15:10:59,dtcc,99_saved,info,14547456,14547456,0,saved data\processed\dtcc_ndf.parquet,

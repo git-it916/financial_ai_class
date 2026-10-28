@@ -1,0 +1,95 @@
+file,column,dtype,non_null,example
+daily,date,datetime64[us],1.0,2021-05-21 00:00:00
+daily,call_1d,float64,0.6729,0.48
+daily,cd_91d,float64,0.6732,0.67
+daily,idr_per_usd,float64,0.6732,14282.5
+daily,inr_per_usd,float64,0.6732,73.335
+daily,kofr,float64,0.3034,3.505
+daily,msb_91d,float64,0.6732,0.469
+daily,php_per_usd,float64,0.6732,47.86
+daily,twd_per_usd,float64,0.6732,28.048
+daily,usdkrw_close,float64,0.1418,1390.3
+daily,usdkrw_close_1530,float64,0.6722,1127.1
+daily,usdkrw_high,float64,0.6722,1129.2
+daily,usdkrw_low,float64,0.6722,1126.1
+daily,usdkrw_mar,float64,0.6732,1133.0
+daily,usdkrw_open,float64,0.6722,1127.0
+daily,close_late_kst,str,0.1418,02:00
+daily,ohl_24h_def,bool[pyarrow],0.6747,False
+daily,swap_mid_1M,float64,0.187,-2.6
+daily,swap_half_spread_1M,float64,0.187,0.5
+daily,swap_mid_2M,float64,0.187,-5.25
+daily,swap_half_spread_2M,float64,0.187,1.0
+daily,swap_mid_3M,float64,0.187,-7.85
+daily,swap_half_spread_3M,float64,0.187,1.25
+daily,swap_mid_6M,float64,0.187,-15.8
+daily,swap_half_spread_6M,float64,0.187,2.0
+daily,swap_mid_1Y,float64,0.187,-29.0
+daily,swap_half_spread_1Y,float64,0.187,2.5
+daily,fred_DCPF3M,float64,0.5207,1.28
+daily,fred_DEXINUS,float64,0.6828,73.03
+daily,fred_DEXKOUS,float64,0.6828,1127.74
+daily,fred_DEXTAUS,float64,0.6828,27.96
+daily,fred_DFF,float64,0.9997,0.06
+daily,fred_DGS2,float64,0.6844,0.15
+daily,fred_DTB3,float64,0.6844,0.01
+daily,fred_DTB4WK,float64,0.6844,0.01
+daily,fred_DTWEXBGS,float64,0.6816,110.842
+daily,fred_SOFR,float64,0.5408,1.54
+daily,fred_SOFR30DAYAVG,float64,0.5357,1.51422
+daily,fred_SOFR90DAYAVG,float64,0.525,1.48591
+daily,fred_VIXCLS,float64,0.6963,16.39
+daily,krx_open,bool,1.0,True
+daily,kr_holiday,bool,1.0,False
+daily,period,string,0.9982,P_pre
+daily,p1_late,bool,1.0,False
+daily,us_dst,bool,1.0,True
+krx_usd,bas_dd,datetime64[us],1.0,2019-10-11 00:00:00
+krx_usd,session,str,1.0,night
+krx_usd,contract,datetime64[us],1.0,2021-06-01 00:00:00
+krx_usd,open,float64,0.1783,1210.0
+krx_usd,high,float64,0.1783,1210.0
+krx_usd,low,float64,0.1783,1210.0
+krx_usd,close,float64,0.1783,1210.0
+krx_usd,settle,float64,0.6726,1222.0
+krx_usd,spot,float64,1.0,1188.8
+krx_usd,volume,int64,1.0,0
+krx_usd,oi,float64,0.8622,51.0
+krx_usd,fx_date,datetime64[us],1.0,2019-10-10 00:00:00
+krx_usd,last_trade,datetime64[us],1.0,2021-06-21 00:00:00
+krx_usd,settle_date,datetime64[us],1.0,2021-06-23 00:00:00
+krx_usd,days,int64,1.0,622
+krx_usd,is_front,bool,1.0,False
+krx_usd,period,string,0.8469,P_pre
+krx_usd,p1_late,bool,1.0,False
+krx_usd,us_dst,bool,1.0,True
+dtcc_ndf,ccy,category,1.0,KRW
+dtcc_ndf,ts_utc,"datetime64[us, UTC]",1.0,2025-12-19 02:11:52+00:00
+dtcc_ndf,rate,Float64,1.0,1476.08
+dtcc_ndf,usd_notional,Float64,1.0,1000000.0
+dtcc_ndf,notional_capped,boolean,1.0,False
+dtcc_ndf,expiry,datetime64[us],1.0,2026-01-23 00:00:00
+dtcc_ndf,platform,category,1.0,BILT
+dtcc_ndf,pb,bool,1.0,False
+dtcc_ndf,package,bool,1.0,False
+dtcc_ndf,nonstd,bool,1.0,False
+dtcc_ndf,dissem_id,string,1.0,1493212325000000701
+dtcc_ndf,ts_kst,"datetime64[us, Asia/Seoul]",1.0,2025-12-19 11:11:52+09:00
+dtcc_ndf,fx_date,datetime64[us],1.0,2025-12-19 00:00:00
+dtcc_ndf,session,str,1.0,day
+dtcc_ndf,period,string,1.0,P1
+dtcc_ndf,p1_late,bool,1.0,True
+dtcc_ndf,us_dst,bool,1.0,False
+dtcc_ndf,days,int64,1.0,35
+dtcc_ndf,tenor,string,0.8214,1M
+dtcc_ndf,dup_group_size,Int64,1.0,1
+dtcc_ndf,outlier,boolean,1.0,False
+dtcc_ndf,bad_rate,bool,1.0,False
+news_ndf,ny_date,datetime64[us],1.0,2026-02-11 00:00:00
+news_ndf,ndf_1m,float64,1.0,1446.2
+news_ndf,ndf_bid,float64,1.0,1446.0
+news_ndf,ndf_ask,float64,0.9705,1470.7
+news_ndf,swap_1m_smb,float64,0.9607,-1.45
+news_ndf,n_articles,int64,1.0,1
+news_ndf,first_pub_kst,"datetime64[us, Asia/Seoul]",1.0,2026-02-12 07:56:00+09:00
+news_ndf,date_inferred,bool,1.0,False

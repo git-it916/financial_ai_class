@@ -24,7 +24,7 @@ MANIFEST = ROOT / "manifest.csv"
 _MANIFEST_LOCK = threading.Lock()
 MANIFEST_FIELDS = ["fetched_at_utc", "source", "url", "path", "sha256", "rows", "note"]
 
-load_dotenv(ROOT / ".env")
+load_dotenv(ROOT / ".env", override=True)  # .env wins over stale OS env vars
 EXTERNAL = Path(os.getenv("EXTERNAL_DATA_DIR") or ROOT / "data" / "external")
 
 # Honest default UA. Some sites tarpit browser-like UAs (FRED); others need one (pass ua=BROWSER_UA).
