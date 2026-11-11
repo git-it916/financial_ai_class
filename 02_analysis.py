@@ -43,13 +43,24 @@ print(t6.round(2).T)
 specs = {"±40": (fx.window(p, n=fx.N_ROBUST), "absr"),
          "시행일 앞뒤 5일 제외": (fx.window(p, donut=5), "absr"),
          "r²": (w.assign(r2=w.r ** 2), "r2")}
-placebo = pd.Series({t0: fx.its(fx.window(p, t0)).params["post"] for t0 in fx.placebo_t0(p)}, name="tau")
+fits = {t0: fx.its(fx.window(p, t0)) for t0 in fx.placebo_t0(p)}
+placebo = pd.DataFrame({"tau": {t0: r.params["post"] for t0, r in fits.items()},
+                        "p": {t0: r.pvalues["post"] for t0, r in fits.items()}})
+# 사후 추가 (2026-11-11): 효과가 없어야 할 가짜 시행일에서 p < 0.05가 5%보다 훨씬 자주 나와,
+# Newey–West 신뢰구간이 실제보다 좁다. 그래서 가짜 τ의 분포와 HC3 표준오차를 함께 보고한다.
+# 가짜 창은 서로 겹쳐서 24개가 독립은 아니다 (분위수는 대략적인 범위).
 main = main | {"placebo_n": len(placebo),
-               "placebo_share_abs_ge": (placebo.abs() >= abs(main["tau"])).mean()}  # 가짜 |τ| ≥ 실제 |τ| 비율
-t8 = pd.DataFrame([main] + [fx.its_row(fx.its(d, y), d, y, k) for k, (d, y) in specs.items()])
+               "placebo_share_abs_ge": (placebo.tau.abs() >= abs(main["tau"])).mean(),  # 가짜 |τ| ≥ 실제 |τ| 비율
+               "placebo_q025": placebo.tau.quantile(0.025), "placebo_q975": placebo.tau.quantile(0.975),
+               "placebo_reject_share": (placebo.p < 0.05).mean()}  # 정상이면 0.05 근처
+hc3 = fx.its_row(fx.its(w, cov_type="HC3"), w, "absr", "주 표본 ±60 (HC3 표준오차)")
+assert abs(hc3["tau"] - main["tau"]) < 1e-12, "표준오차만 바꿨는데 τ가 달라짐"
+t8 = pd.DataFrame([main, hc3] + [fx.its_row(fx.its(d, y), d, y, k) for k, (d, y) in specs.items()])
 fx.save(t8, "T8_robustness", index=False)
-fx.save(placebo.rename_axis("t0").to_frame(), "T8_placebo")
-print(t8[["spec", "n", "tau", "tau_lo", "tau_hi", "tau_p", "placebo_share_abs_ge"]].round(3))
+fx.save(placebo.rename_axis("t0"), "T8_placebo")
+print(t8[["spec", "n", "tau", "tau_se", "tau_lo", "tau_hi", "tau_p", "mde_pct_of_pre"]].round(3))
+print(f"가짜 시행일 {len(placebo)}개: τ 2.5~97.5% [{main['placebo_q025']:.3f}, {main['placebo_q975']:.3f}], "
+      f"p < 0.05 비율 {main['placebo_reject_share']:.2f}, |τ| ≥ 실제 비율 {main['placebo_share_abs_ge']:.2f}")
 
 # %% 그림 F2 환율과 일간 절대수익률, F3 분절회귀 적합선, F6 고저폭 추이
 reform = pd.Timestamp(fx.REFORM)
@@ -77,7 +88,8 @@ fig.savefig(fx.FIGS / "F3_its.png", dpi=150, bbox_inches="tight")
 
 fig, ax = plt.subplots(figsize=(9, 4))
 ax.plot(s.date, s.parkinson, lw=0.5, alpha=0.5, label="daily Parkinson σ")
-ax.plot(s.date, s.parkinson.rolling(20).mean(), lw=2, label="20-day mean")
+# 20일 평균은 시행일을 넘겨서 내지 않는다 (전환 후 선은 20일째부터). 넘기면 측정 창이 다른 값이 섞인다.
+ax.plot(s.date, s.groupby(s.t >= 0).parkinson.transform(lambda x: x.rolling(20).mean()), lw=2, label="20-day mean")
 ax.hlines(w.loc[w.post == 0, "parkinson"].mean() * np.sqrt(24 / 17), reform, s.date.max(),
           colors="r", ls=":", label="pre mean × √(24/17)")
 ax.axvline(reform, color="k", ls="--", lw=1)

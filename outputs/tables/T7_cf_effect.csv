@@ -1,2 +1,2 @@
-﻿mean,lo,hi,p,n,model,placebo_n,placebo_share_abs_ge
-0.0772,0.0013,0.1530,0.0461,57,ridge,24,0.6667
+﻿mean,lo,hi,p,p_small,n,model,placebo_n,placebo_share_abs_ge,pre60_mean,pre60_n,diff,diff_lo,diff_hi,diff_p
+0.0772,0.0013,0.1530,0.0461,0.0530,57,ridge,24,0.6667,0.0546,56,0.0225,-0.0972,0.1422,0.7125

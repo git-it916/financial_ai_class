@@ -34,10 +34,12 @@ def scores(y: pd.Series, yhat, bench) -> dict:
 
 
 def nw_mean(x) -> dict:
-    """평균과 Newey–West(시차 5) 95% 신뢰구간·p값."""
-    r = sm.OLS(np.asarray(x, float), np.ones(len(x))).fit(cov_type="HAC", cov_kwds={"maxlags": 5})
+    """평균과 Newey–West(시차 5) 95% 신뢰구간·p값 (사양). p_small은 소표본 보정 + t분포로 다시 잰 p값."""
+    y, one = np.asarray(x, float), np.ones(len(x))
+    r = sm.OLS(y, one).fit(cov_type="HAC", cov_kwds={"maxlags": 5})
+    small = sm.OLS(y, one).fit(cov_type="HAC", cov_kwds={"maxlags": 5, "use_correction": True}, use_t=True)
     lo, hi = r.conf_int()[0]
-    return {"mean": r.params[0], "lo": lo, "hi": hi, "p": r.pvalues[0], "n": len(x)}
+    return {"mean": r.params[0], "lo": lo, "hi": hi, "p": r.pvalues[0], "p_small": small.pvalues[0], "n": len(x)}
 
 
 # %% AI-1 반사실: 글로벌 요인만으로 '전환이 없었다면'의 |r|. 원화 자신의 과거 변동성은 넣지 않는다.
@@ -73,15 +75,26 @@ def cf(t0: int, n: int = fx.N_MAIN) -> pd.DataFrame:
 post = cf(0)
 placebo = pd.Series({t0: cf(t0).resid.mean() for t0 in fx.placebo_t0(panel)}, name="mean_resid")
 eff = nw_mean(post.resid)
+# 사후 추가 (2026-11-11): 전환 직전 60거래일도 같은 방법(그 전까지 학습)으로 예측한다.
+# 모델이 전환 전부터 낮게 예측하고 있었다면 전환 후 잔차를 효과로 읽을 수 없으므로, 둘의 차이를 함께 보고한다.
+pre60 = cf(-fx.N_MAIN)
+assert pre60.t.max() < 0 <= post.t.min() and not pre60.post.any() and post.post.all()
+both = pd.concat([pre60, post])
+d = sm.OLS(both.resid, sm.add_constant(both.post.astype(float))).fit(cov_type="HAC", cov_kwds={"maxlags": 5})
+assert abs(d.params["post"] - (post.resid.mean() - pre60.resid.mean())) < 1e-9
+d_lo, d_hi = d.conf_int().loc["post"]
 eff = eff | {"model": use, "placebo_n": len(placebo),
-             "placebo_share_abs_ge": (placebo.abs() >= abs(eff["mean"])).mean()}
+             "placebo_share_abs_ge": (placebo.abs() >= abs(eff["mean"])).mean(),
+             "pre60_mean": pre60.resid.mean(), "pre60_n": len(pre60),
+             "diff": d.params["post"], "diff_lo": d_lo, "diff_hi": d_hi, "diff_p": d.pvalues["post"]}
 fx.save(pd.DataFrame([eff]), "T7_cf_effect", index=False)
 fx.save(placebo.rename_axis("t0").to_frame(), "T7_cf_placebo")
 print(pd.DataFrame([eff]).round(4).T)
 
 # %% 그림 F4 실제 vs 반사실 (20일 평균), F5 가짜 시행일 분포
 s = p[p.t < fx.N_MAIN].assign(pred=MODELS[use]().fit(pre[X1], pre.absr).predict(p.loc[p.t < fx.N_MAIN, X1]))
-a, b = s.absr.rolling(20).mean(), s.pred.rolling(20).mean()
+# 20일 평균은 시행일을 넘겨서 내지 않는다 (전환 후 선은 20일째부터). 넘기면 전환 전 값이 음영에 섞인다.
+a, b = (s.groupby(s.t >= 0)[c].transform(lambda x: x.rolling(20).mean()) for c in ("absr", "pred"))
 fig, ax = plt.subplots(figsize=(9, 4))
 ax.plot(s.date, a, label="actual |r| (20-day mean)")
 ax.plot(s.date, b, label=f"counterfactual: {use} (20-day mean)")
@@ -113,12 +126,17 @@ model = ridge().fit(p[X2], p.absr)
 sc, rg = model[0], model[-1]
 last, recent = panel.iloc[-1], panel.absr.iloc[-22:]
 q10, q90 = np.quantile(te.absr - pred["ridge"], [0.1, 0.9])
+# 버그 수정 (2026-11-11): 패널 마지막 행의 VIX는 하루 전 미국 값이다. 기준일 다음 날 예보에 들어갈
+# 값은 기준일 밤의 VIX이므로, 슬라이더 기본값은 원본의 최신 VIX로 둔다.
+vix = pd.read_csv(fx.RAW / "fred_VIXCLS.csv", index_col=0, parse_dates=True).VIXCLS
+vix = pd.to_numeric(vix, errors="coerce").dropna()
+assert last.us_date <= vix.index[-1] <= last.date, f"최신 VIX 날짜 {vix.index[-1]:%Y-%m-%d}가 패널과 맞지 않음"
 spec = {
     "asof": f"{last.date:%Y-%m-%d}", "features": X2,
     "mean": sc.mean_.tolist(), "scale": sc.scale_.tolist(),
     "coef": rg.coef_.tolist(), "intercept": float(rg.intercept_),
     "har": {"har_1": float(recent.iloc[-1]), "har_5": float(recent.iloc[-5:].mean()), "har_22": float(recent.mean())},
-    "close_1530": float(last.close_1530), "vix_default": float(np.exp(last.ln_vix)),
+    "close_1530": float(last.close_1530), "vix_default": float(vix.iloc[-1]),
     "resid_q10": float(q10), "resid_q90": float(q90),
     "tiers": np.quantile(model.predict(p[X2]), [1 / 3, 2 / 3]).tolist(),
 }

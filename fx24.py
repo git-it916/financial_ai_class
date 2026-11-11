@@ -21,6 +21,7 @@ PLACEBO = ("2025-10-01", "2026-04-01", 5)  # 가짜 시행일: 기간과 거래�
 # 출처: python holidays 0.108 (KR). 전환 전 공휴일은 ECOS에 행이 없다.
 POST_HOLIDAYS = ["2026-07-17", "2026-08-17", "2026-09-24", "2026-09-25", "2026-10-05", "2026-10-09"]
 CONTROLS = "ln_vix + dollar + spread + d_dollar_abs + monday"
+MDE_Z = 2.8  # z(0.975) + z(0.80): 양측 5%에서 검정력 80%로 잡아낼 수 있는 최소 효과 = 2.8 × 표준오차
 
 
 def load_panel() -> pd.DataFrame:
@@ -41,20 +42,23 @@ def window(p: pd.DataFrame, t0: int = 0, n: int = N_MAIN, donut: int = 0) -> pd.
     return w[(w.t < -donut) | (w.t >= donut)]
 
 
-def its(w: pd.DataFrame, y: str = "absr"):
-    """분절회귀 y = α + βt + τ·post + κ·t·post + γ'X + ε, Newey–West 시차 5."""
-    return smf.ols(f"{y} ~ t + post + t:post + {CONTROLS}", data=w).fit(
-        cov_type="HAC", cov_kwds={"maxlags": 5})
+def its(w: pd.DataFrame, y: str = "absr", **cov):
+    """분절회귀 y = α + βt + τ·post + κ·t·post + γ'X + ε. 기본은 Newey–West 시차 5 (사양).
+    다른 표준오차는 its(w, cov_type="HC3")처럼 준다. 계수는 같고 표준오차만 달라진다."""
+    cov = cov or {"cov_type": "HAC", "cov_kwds": {"maxlags": 5}}
+    return smf.ols(f"{y} ~ t + post + t:post + {CONTROLS}", data=w).fit(**cov)
 
 
 def its_row(res, w: pd.DataFrame, y: str, spec: str) -> dict:
-    """보고용 한 줄: τ·κ와 95% 신뢰구간, n, 전환 전 평균 대비 τ(%)."""
+    """보고용 한 줄: τ·κ와 95% 신뢰구간, n, 전환 전 평균 대비 τ(%)와 최소검출효과(%)."""
     ci, pre = res.conf_int(), w.loc[w.post == 0, y].mean()
     return {"spec": spec, "y": y, "n": int(res.nobs),
-            "tau": res.params["post"], "tau_lo": ci.at["post", 0], "tau_hi": ci.at["post", 1],
+            "tau": res.params["post"], "tau_se": res.bse["post"],
+            "tau_lo": ci.at["post", 0], "tau_hi": ci.at["post", 1],
             "tau_p": res.pvalues["post"], "kappa": res.params["t:post"],
             "kappa_lo": ci.at["t:post", 0], "kappa_hi": ci.at["t:post", 1],
-            "pre_mean": pre, "tau_pct_of_pre": 100 * res.params["post"] / pre}
+            "pre_mean": pre, "tau_pct_of_pre": 100 * res.params["post"] / pre,
+            "mde_pct_of_pre": 100 * MDE_Z * res.bse["post"] / pre}
 
 
 def placebo_t0(p: pd.DataFrame) -> list[int]:
@@ -81,6 +85,10 @@ if __name__ == "__main__":
     null = its(window(fake, t0=-120)).conf_int().loc["post"]
     assert hit[0] < 0.15 < hit[1], hit.tolist()
     assert null[0] < 0 < null[1], null.tolist()
+    hac, hc3 = its(window(fake)), its(window(fake), cov_type="HC3")
+    assert np.allclose(hac.params, hc3.params) and not np.isclose(hac.bse["post"], hc3.bse["post"])
+    row = its_row(hac, window(fake), "absr", "합성")
+    assert np.isclose(row["mde_pct_of_pre"], 100 * MDE_Z * row["tau_se"] / row["pre_mean"])
     donut = window(fake, donut=5)
     assert len(window(fake)) == 2 * N_MAIN and len(donut) == 2 * N_MAIN - 10
     assert not donut.t.between(-5, 4).any()
