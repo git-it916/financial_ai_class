@@ -67,6 +67,9 @@ print(f"ECOS {kr.index.min():%Y-%m-%d}~{kr.index.max():%Y-%m-%d}, FRED {us.index
 
 # %% 2. 패널
 # 거래일 = 15:30 종가가 있는 날에서 전환 후 공휴일을 뺀 날 (전환 전과 같은 달력).
+# 전환 후 공휴일 목록 점검: 채권시장이 쉬어 국고채 금리는 없는데 환율 종가는 고시된 날과 같아야 한다
+closed = kr.index[kr.close_1530.notna() & kr.kr10y.isna() & (kr.index >= fx.REFORM)]
+assert list(closed) == list(pd.to_datetime(fx.POST_HOLIDAYS)), f"전환 후 공휴일 목록이 자료와 다름: {closed.date}"
 kr = kr.assign(kr10y=kr.kr10y.ffill())  # 국고채는 채권 영업일 기준이라 먼저 채운다
 p = kr[kr.close_1530.notna() & ~kr.index.isin(pd.to_datetime(fx.POST_HOLIDAYS))]
 

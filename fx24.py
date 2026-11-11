@@ -1,6 +1,7 @@
 """공용 상수와 함수. `python fx24.py`를 실행하면 합성 자료로 분절회귀를 점검합니다."""
 from pathlib import Path
 
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
@@ -22,6 +23,13 @@ PLACEBO = ("2025-10-01", "2026-04-01", 5)  # 가짜 시행일: 기간과 거래�
 POST_HOLIDAYS = ["2026-07-17", "2026-08-17", "2026-09-24", "2026-09-25", "2026-10-05", "2026-10-09"]
 CONTROLS = "ln_vix + dollar + spread + d_dollar_abs + monday"
 MDE_Z = 2.8  # z(0.975) + z(0.80): 양측 5%에서 검정력 80%로 잡아낼 수 있는 최소 효과 = 2.8 × 표준오차
+
+# 그림 양식 (논문 양식과 같게): Times New Roman, 6.5 × 4.2인치 300dpi, 위·오른쪽 테두리 없음, 범례는 그림 아래
+mpl.rcParams.update({"font.family": "Times New Roman", "font.size": 11, "mathtext.fontset": "stix",
+                     "figure.figsize": (6.5, 4.2), "savefig.dpi": 300, "figure.constrained_layout.use": True,
+                     "axes.spines.top": False, "axes.spines.right": False, "legend.frameon": False})
+RED, BLUE, PURPLE, GRAY = "#C0392B", "#2471A3", "#7D3C98", "#8C8C8C"
+REFORM_LINE = {"color": "#4D4D4D", "ls": ":", "lw": 1}  # 시행일 세로선
 
 
 def load_panel() -> pd.DataFrame:
